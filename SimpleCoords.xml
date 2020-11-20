@@ -1,0 +1,147 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<!-- SimpleCoords -->
+<Frame name="SimpleCoordsFrame" toplevel="true" enableMouse="true" movable = "true" parent="UIParent" hidden="false">
+	<Size>
+		<AbsDimension x="76" y="21"/>
+	</Size>
+	<Anchors>
+		<Anchor point="CENTER">
+		</Anchor>
+	</Anchors>
+
+	<Backdrop name="$parentBackdrop" 
+		bgFile="Interface\TutorialFrame\TutorialFrameBackground"
+		edgeFile="Interface\Tooltips\UI-Tooltip-Border"
+		tile="true">
+		<EdgeSize>
+			<AbsValue val="16"/>
+		</EdgeSize>
+		<BackgroundInsets>
+			<AbsInset left="5" right="5" top="5" bottom="5"/>
+		</BackgroundInsets>
+	</Backdrop>
+
+	<Layers>
+		<Layer level="ARTWORK">
+			<FontString name="Simple_CoordsText"
+			inherits="GameFontNormalSmall"
+			text="---"
+			>
+				<Anchors>
+					<Anchor point="CENTER"> 
+						 <Offset x="0" y="0"/>
+					</Anchor>
+				</Anchors>
+			</FontString>
+		</Layer>
+	</Layers>
+
+	<Frames>
+		<EditBox name="SimpleCoords_X" 
+		inherits="InputBoxTemplate" 
+		autoFocus="false"
+		hidden="true"
+		>
+			<Size>
+				<AbsDimension x="30" y="26"/>
+			</Size>
+			<Anchors>
+				<Anchor 
+					point="TOPLEFT"
+					relativePoint="BOTTOMLEFT" 
+					relativeTo="SimpleCoordsFrame"
+				>
+					<Offset>
+							<AbsDimension x="7" y="5"/>
+					</Offset>
+				</Anchor>
+			</Anchors> 
+			 <Scripts>
+				<OnTabPressed>
+					getglobal("SimpleCoords_Y"):SetFocus();
+				</OnTabPressed>
+				<OnSpacePressed>
+					getglobal("SimpleCoords_Y"):SetFocus();
+				</OnSpacePressed>
+				<OnEnterPressed>
+					self:ClearFocus(); <!-- was "this" -->
+					SimpleCoords_AcceptValue();
+				</OnEnterPressed>
+				<OnEnter>
+					SimpleCoordsEnter_ShowTooltip();
+				</OnEnter>
+				<OnLeave>
+					SimpleCoords_HideTooltip();
+				</OnLeave>
+			</Scripts>
+		</EditBox>
+	
+	
+		<EditBox name="SimpleCoords_Y" 
+		inherits="InputBoxTemplate" 
+		autoFocus="false"
+		hidden="true"
+		>
+			<Size>
+				<AbsDimension x="30" y="26"/>
+			</Size>
+			<Anchors>
+				<Anchor 
+					point="TOPRIGHT"
+					relativePoint="BOTTOMRIGHT" 
+					relativeTo="SimpleCoordsFrame"
+				>
+					<Offset>
+							<AbsDimension x="-1" y="5"/>
+					</Offset>
+				</Anchor>
+			</Anchors>   
+			 <Scripts>
+				<OnEnterPressed>
+					self:ClearFocus(); <!-- was "this" -->
+					SimpleCoords_AcceptValue();
+				</OnEnterPressed>
+				<OnTabPressed>
+					getglobal("SimpleCoords_X"):SetFocus();
+				</OnTabPressed>
+				<OnEnter>
+					SimpleCoordsEnter_ShowTooltip();
+				</OnEnter>
+				<OnLeave>
+					SimpleCoords_HideTooltip();
+				</OnLeave>
+			</Scripts>
+		</EditBox>
+	
+	
+	</Frames>
+
+	<Scripts>
+		<OnLoad>
+			self:SetClampedToScreen(1); <!-- was "this" -->
+			SimpleCoords_OnLoad();
+		</OnLoad>
+		<OnEnter>
+			SimpleCoords_ShowTooltip();
+		</OnEnter>
+		<OnLeave>
+			SimpleCoords_HideTooltip();
+		</OnLeave>
+
+		<OnUpdate function="Simple_Coords_OnUpdate"/>
+		
+		<OnMouseDown>
+			if ( IsShiftKeyDown() ) then 
+					self:StartMoving(); <!-- was "this" -->
+				else
+					SimpleCoords_TogglePanel();
+				end
+		</OnMouseDown>
+		<OnMouseUp>self:StopMovingOrSizing();</OnMouseUp> <!-- was "this" -->
+		<OnDragStop>self:StopMovingOrSizing();</OnDragStop> <!-- was "this" -->
+	</Scripts>
+	
+
+</Frame>
+	
+</Ui> 

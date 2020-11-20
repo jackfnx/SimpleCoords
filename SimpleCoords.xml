@@ -9,9 +9,8 @@
 		</Anchor>
 	</Anchors>
 
-	<Backdrop name="$parentBackdrop" 
-		bgFile="Interface\TutorialFrame\TutorialFrameBackground"
-		edgeFile="Interface\Tooltips\UI-Tooltip-Border"
+	<Backdrop name="$parentBackdrop"
+
 		tile="true">
 		<EdgeSize>
 			<AbsValue val="16"/>
@@ -28,7 +27,7 @@
 			text="---"
 			>
 				<Anchors>
-					<Anchor point="CENTER"> 
+					<Anchor point="CENTER">
 						 <Offset x="0" y="0"/>
 					</Anchor>
 				</Anchors>
@@ -37,8 +36,8 @@
 	</Layers>
 
 	<Frames>
-		<EditBox name="SimpleCoords_X" 
-		inherits="InputBoxTemplate" 
+		<EditBox name="SimpleCoords_X"
+		inherits="InputBoxTemplate"
 		autoFocus="false"
 		hidden="true"
 		>
@@ -46,39 +45,40 @@
 				<AbsDimension x="30" y="26"/>
 			</Size>
 			<Anchors>
-				<Anchor 
+				<Anchor
 					point="TOPLEFT"
-					relativePoint="BOTTOMLEFT" 
+					relativePoint="BOTTOMLEFT"
 					relativeTo="SimpleCoordsFrame"
 				>
 					<Offset>
 							<AbsDimension x="7" y="5"/>
 					</Offset>
 				</Anchor>
-			</Anchors> 
+			</Anchors>
 			 <Scripts>
 				<OnTabPressed>
-					getglobal("SimpleCoords_Y"):SetFocus();
+
+					_G["SimpleCoords_Y"]:SetFocus();
 				</OnTabPressed>
 				<OnSpacePressed>
-					getglobal("SimpleCoords_Y"):SetFocus();
+					_G["SimpleCoords_Y"]:SetFocus();
 				</OnSpacePressed>
 				<OnEnterPressed>
 					self:ClearFocus(); <!-- was "this" -->
-					SimpleCoords_AcceptValue();
+					SCoordsAddon.AcceptValue();
 				</OnEnterPressed>
 				<OnEnter>
-					SimpleCoordsEnter_ShowTooltip();
+					SCoordsAddon.ShowTooltip();
 				</OnEnter>
 				<OnLeave>
-					SimpleCoords_HideTooltip();
+					SCoordsAddon.HideTooltip();
 				</OnLeave>
 			</Scripts>
 		</EditBox>
-	
-	
-		<EditBox name="SimpleCoords_Y" 
-		inherits="InputBoxTemplate" 
+
+
+		<EditBox name="SimpleCoords_Y"
+		inherits="InputBoxTemplate"
 		autoFocus="false"
 		hidden="true"
 		>
@@ -86,62 +86,61 @@
 				<AbsDimension x="30" y="26"/>
 			</Size>
 			<Anchors>
-				<Anchor 
+				<Anchor
 					point="TOPRIGHT"
-					relativePoint="BOTTOMRIGHT" 
+					relativePoint="BOTTOMRIGHT"
 					relativeTo="SimpleCoordsFrame"
 				>
 					<Offset>
 							<AbsDimension x="-1" y="5"/>
 					</Offset>
 				</Anchor>
-			</Anchors>   
+			</Anchors>
 			 <Scripts>
 				<OnEnterPressed>
 					self:ClearFocus(); <!-- was "this" -->
-					SimpleCoords_AcceptValue();
+					SCoordsAddon.AcceptValue();
 				</OnEnterPressed>
 				<OnTabPressed>
-					getglobal("SimpleCoords_X"):SetFocus();
+					_G["SimpleCoords_X"]:SetFocus();
 				</OnTabPressed>
 				<OnEnter>
-					SimpleCoordsEnter_ShowTooltip();
+					SCoordsAddon.ShowTooltip();
 				</OnEnter>
 				<OnLeave>
-					SimpleCoords_HideTooltip();
+					SCoordsAddon.HideTooltip();
 				</OnLeave>
 			</Scripts>
 		</EditBox>
-	
-	
+
+
 	</Frames>
 
 	<Scripts>
 		<OnLoad>
 			self:SetClampedToScreen(1); <!-- was "this" -->
-			SimpleCoords_OnLoad();
 		</OnLoad>
 		<OnEnter>
-			SimpleCoords_ShowTooltip();
+			SCoordsAddon.ShowTooltip();
 		</OnEnter>
 		<OnLeave>
-			SimpleCoords_HideTooltip();
+			SCoordsAddon.HideTooltip();
 		</OnLeave>
 
-		<OnUpdate function="Simple_Coords_OnUpdate"/>
-		
+	<!--	<OnUpdate function="SCoordsAddon.OnUpdate"/> -->
+
 		<OnMouseDown>
-			if ( IsShiftKeyDown() ) then 
+			if ( IsShiftKeyDown() ) then
 					self:StartMoving(); <!-- was "this" -->
 				else
-					SimpleCoords_TogglePanel();
+					SCoordsAddon.TogglePanel();
 				end
 		</OnMouseDown>
 		<OnMouseUp>self:StopMovingOrSizing();</OnMouseUp> <!-- was "this" -->
 		<OnDragStop>self:StopMovingOrSizing();</OnDragStop> <!-- was "this" -->
 	</Scripts>
-	
+
 
 </Frame>
-	
-</Ui> 
+
+</Ui>

@@ -1,141 +1,96 @@
-local HEARTBEAT_INTERVAL = 0.5; -- how many seconds per heartbeat of our internal timer
-Simple_Coords_SecondsSinceUpdate=0; -- globalish tick counter
-Simple_Coords_Map_SecondsSinceUpdate=0; -- globalish tick counter
+-- Globals:
+-- ========
+-- our big global object:
+SCoordsAddon = {
+	addon_loaded = false,
+	seconds_since_update = 0, -- tick counter
+	seconds_since_map_update = 0, -- tick counter
+
+	minimapIcon,
+	worldTarget,
+	panelOpen = false,
+	haveArrived=false,
+	dest_x = -1000,
+	dest_y = -1000,
+	showWorldMapIcon = true,
+	zone_dirty = true,
+
+	-- Constants:
+	MINIMAP_ICON_NAME = "SimpleCoords",
+	WORLDMAP_ICON_NAME = "SimpleCoordsW",
+
+	HALF_PI = math.pi / 2,
+	ROOT_HALF = math.sqrt(0.5)
 
 
-local minimapIcon;
-local worldTarget;
-local panelOpen = false;
-local haveArrived=false;
-local dest_x = -1000;
-local dest_y = -1000;
-local showWorldMapIcon = true;
-local zone_dirty = true;
+}
 
--- Constants:
-local MINIMAP_ICON_NAME = "SimpleCoords";
-local WORLDMAP_ICON_NAME = "SimpleCoordsW";
-
-local HALF_PI = math.pi / 2;
-local ROOT_HALF = math.sqrt(0.5)
--- Bring in HereBeDragons
-local hbd = LibStub("HereBeDragons-2.0")
-local pins = LibStub("HereBeDragons-Pins-2.0")
-
---
-
-function SimpleCoords_OnLoad()
-	-- create the dot: (encapsulated as an obbject in case we want to reuse it
-	-- minimapIcon=CreateFrame("Button", nil, Minimap)
-	minimapIcon=CreateFrame("Button", "SimpleCoordsDotFrame", Minimap)
-	minimapIcon:SetHeight(12)
-	minimapIcon:SetWidth(12)
-	local texture = minimapIcon:CreateTexture()
-	texture:SetTexture("Interface\\AddOns\\SimpleCoords\\images\\redbull")
-	texture:SetAllPoints()
-	minimapIcon.dot = texture
-	--minimapIcon.dot:Hide() -- start  hidden
-	--minimapIcon.dot:Show();
-	minimapIcon:SetScript("OnUpdate", SimpleCoords_MapIcon_Update)
-
-	if (showWorldMapIcon) then
-		worldTarget=CreateFrame("Button", "SimpleCoordsWorldTargetFrame",WorldMapDetailFrame )-- WorldMapDetailFrame
-		worldTarget:SetWidth(16)
-		worldTarget:SetHeight(16)
-
-		worldTarget.icon = worldTarget:CreateTexture("ARTWORK")
-		worldTarget.icon:SetAllPoints()
-		worldTarget.icon:SetTexture("Interface\\AddOns\\SimpleCoords\\images\\redbull")
-
-	end
-	-- create the arrow:
-    minimapIcon.arrow = minimapIcon:CreateTexture("BACKGROUND")
-   -- minimapIcon.arrow:SetTexture("Interface\\AddOns\\SimpleCoords\\images\\mmarrow")
-    minimapIcon.arrow:SetTexture("Interface\\Minimap\\Minimap-QuestArrow")
-    minimapIcon.arrow:SetPoint("CENTER", 0 ,0)
-    minimapIcon.arrow:SetHeight(40) -- 32?
-    minimapIcon.arrow:SetWidth(40)
-    minimapIcon.arrow:Hide()
-
-	-- Register the slash command
-	SLASH_SIMPLECOORDS1 = "/dest";
-	SlashCmdList["SIMPLECOORDS"] = SimpleCoords_CommandLine;
-	-- make a global for testing:
-	--SimpleCoordsMapIcon=minimapIcon;
-
-DEFAULT_CHAT_FRAME:AddMessage("SimpleCoords loaded. Shift-drag to move the window. Click window to toggle panel. ENTER to set new value.",  0.5, 1.0, 0.5, 1);
-
-end
-
-
-
-
-
-
--- ----------------------------------
-function Simple_Coords_OnUpdate(self, elapsed)
---
--- Updates the coordinate display
---
--- Uses HEARTBEAT_INTERVAL to limit how often the display is updated
--- params:
--- self
--- elapsed incrementing timer (second resolution)
---
--- globals:
--- zone_dirty bool need to refresh location information (after a login or zone change)
---
-
-	Simple_Coords_SecondsSinceUpdate = Simple_Coords_SecondsSinceUpdate + elapsed;
-	if (Simple_Coords_SecondsSinceUpdate > HEARTBEAT_INTERVAL) then
-	  if (zone_dirty) then -- right now, this only happens the first time. This test may no longer be needed.
-	    -- SetMapToCurrentZone();
-	    zone_dirty = false;
-	  end
-		-- local x, y = hbd:GetPlayerWorldPosition();
-		local x, y, UiMapID, UiMapType = hbd:GetPlayerZonePosition();
-
-		-- if x and y and x > 0 and y > 0 then
-		if x and y and x > 0 and y > 0 then
-      Simple_CoordsText:SetText(format( "%.1f, %.1f", x * 100, y * 100));
-		else
-			Simple_CoordsText:SetText("---");
-			minimapIcon.dot:Hide();
+-- boot frame:
+local boot_frame = CreateFrame("Frame")
+boot_frame:RegisterEvent("ADDON_LOADED")
+boot_frame:SetScript(
+  "OnEvent", function(frame,event, addon, ...)
+		if frame == boot_frame then
+	    SCoordsAddon.init(event, addon);
 		end
-		Simple_Coords_SecondsSinceUpdate=0;
-	end -- if
+  end
+);
+
+
+
+---
+-- Open or close the coordinate window depending on current state
+-- With accompanying sound
+--
+function SCoordsAddon.TogglePanel()
+	if(_G["SimpleCoords_X"]:IsShown()) then
+	  PlaySoundFile(567515);
+		-- PlaySoundFile("Sound\\interface\\uMiniMapClose.wav");
+
+		_G["SimpleCoords_X"]:Hide();
+		_G["SimpleCoords_Y"]:Hide();
+		_G["SimpleCoords_X"]:ClearFocus();
+		_G["SimpleCoords_Y"]:ClearFocus();
+    SCoordsAddon.RemoveIcons()
+		panelOpen=false;
+
+	else
+		PlaySoundFile(567529); -- ("Sound\\interface\\uMiniMapOpen.wav");
+
+		_G["SimpleCoords_X"]:Show();
+		_G["SimpleCoords_Y"]:Show();
+		_G["SimpleCoords_X"]:SetFocus();
+		panelOpen=true;
+	end
+
 end
 
 
 
 
 
-
-
-
--- ----------------------------------
-function SimpleCoords_AcceptValue()
+function SCoordsAddon.AcceptValue()
 --
 -- Called when ENTERing new values in the coordinate window
 -- Reads the values in SimpleCoords_X and SimpleCoords_Y text input frames (Still defined in the XML)
 -- This function is attached to the OnEnterPressed handlers for those frames.
 
     -- clear any existing icon(s), since we have new coords:
-    SimpleCoordsRemoveIcons()
+    SCoordsAddon.RemoveIcons()
 
-  if (getglobal("SimpleCoords_X"):GetText() == "" and getglobal("SimpleCoords_Y"):GetText() == "") then
-    SimpleCoords_TogglePanel();
+  if (_G["SimpleCoords_X"]:GetText() == "" and _G["SimpleCoords_Y"]:GetText() == "") then
+    SCoordsAddon.TogglePanel();
   else
-    getglobal("SimpleCoords_X"):ClearFocus();
-    getglobal("SimpleCoords_Y"):ClearFocus();
-    if (getglobal("SimpleCoords_X"):GetText() == "" or getglobal("SimpleCoords_Y"):GetText() == "") then
+    _G["SimpleCoords_X"]:ClearFocus();
+    _G["SimpleCoords_Y"]:ClearFocus();
+    if (_G["SimpleCoords_X"]:GetText() == "" or _G["SimpleCoords_Y"]:GetText() == "") then
     -- only one field filled in
     else
       PlaySoundFile(567574);
       -- PlaySoundFile("Sound\\interface\\PickUp\\PutDownGems.wav");
       local x_text, y_text;
-      x_text = getglobal("SimpleCoords_X"):GetText();
-      y_text = getglobal("SimpleCoords_Y"):GetText();
+      x_text = _G["SimpleCoords_X"]:GetText();
+      y_text = _G["SimpleCoords_Y"]:GetText();
       y_text = gsub(y_text, ",", "."); -- swap commas for decimals for those European types
       y_text = gsub(y_text, "[%a%c%-%(%)]", ""); -- %a: letters. %c: control characters %-: -
       x_text = gsub(x_text, ",", ".");
@@ -147,11 +102,11 @@ function SimpleCoords_AcceptValue()
       -- minimap
       local playerZoneX, playerZoneY, uiMapID = SimpleCoords_GetPlayerZoneCoords();
 
-      AddMinimapIcon(minimapIcon, dest_x, dest_y, uiMapID ) --icon, x, y, uiMapID
+      AddMinimapIcon(SCoordsAddon.minimapIcon, dest_x, dest_y, uiMapID ) --icon, x, y, uiMapID
 
       -- add world map
       -- DEFAULT_CHAT_FRAME:AddMessage("mapID: " .. mapID ,  0.8, 1.0, 0.5, 1);
-      AddWorldMapIcon(worldTarget, uiMapID, dest_x, dest_y);
+      SCoordsAddon.AddWorldMapIcon(SCoordsAddon.worldTarget, uiMapID, dest_x, dest_y);
       haveArrived=false;
 
     end
@@ -162,52 +117,18 @@ end
 
 
 
-
--- ----------------------------------
-function SimpleCoords_TogglePanel()
---
--- Open or close the coordinate window depending on current state
--- With accompanying sound
---
-	if(getglobal("SimpleCoords_X"):IsShown()) then
-	  PlaySoundFile(567515);
-		-- PlaySoundFile("Sound\\interface\\uMiniMapClose.wav");
-
-		getglobal("SimpleCoords_X"):Hide();
-		getglobal("SimpleCoords_Y"):Hide();
-		getglobal("SimpleCoords_X"):ClearFocus();
-		getglobal("SimpleCoords_Y"):ClearFocus();
-    SimpleCoordsRemoveIcons()
-		panelOpen=false;
-
-	else
-		PlaySoundFile(567529); -- ("Sound\\interface\\uMiniMapOpen.wav");
-
-		getglobal("SimpleCoords_X"):Show();
-		getglobal("SimpleCoords_Y"):Show();
-		getglobal("SimpleCoords_X"):SetFocus();
-		panelOpen=true;
-	end
-
-end
-
-
-
-
-
-function SimpleCoords_MapIcon_Update(self, elapsed)
---
+---
 -- Updates the minimap icon
 --
 -- Uses HEARTBEAT_INTERVAL to limit how often the display is updated
--- params:
--- self
--- elapsed incrementing timer (second resolution)
+-- @tab  self (Frame)
+-- @number elapsed incrementing timer (second resolution)
 --
+function SimpleCoords_MapIcon_Update(self, elapsed)
 
-  Simple_Coords_Map_SecondsSinceUpdate = Simple_Coords_Map_SecondsSinceUpdate + elapsed;
+  SCoordsAddon.seconds_since_map_update = SCoordsAddon.seconds_since_map_update + elapsed;
 
-	if (Simple_Coords_Map_SecondsSinceUpdate > HEARTBEAT_INTERVAL) then
+	if (SCoordsAddon.seconds_since_map_update > HEARTBEAT_INTERVAL) then
 	  if haveArrived ~= true then
 	  -- if the panel is open, but we "have arrived" don't bother to update hidden things
 
@@ -232,15 +153,15 @@ function SimpleCoords_MapIcon_Update(self, elapsed)
       end
 
 
-   local angle,distance = pins:GetVectorToIcon(minimapIcon) --	local angle = Astrolabe:GetDirectionToIcon(minimapIcon)
+   local angle,distance = SCoordsAddon.pins:GetVectorToIcon(minimapIcon) --	local angle = Astrolabe:GetDirectionToIcon(minimapIcon)
    if (distance ~= nil) then
     if (distance < 10) then
       if (not haveArrived) then
         DEFAULT_CHAT_FRAME:AddMessage("You have arrived.",  0.8, 1.0, 0.5, 1); -- let them now they have arrived
         -- remove the icons
-        SimpleCoordsRemoveIcons()
-        haveArrived = true
-        event_complete = false
+        SCoordsAddon.RemoveIcons();
+        haveArrived = true;
+        event_complete = false;
       end -- haveArrived
     end -- distance < 10)
    end
@@ -263,7 +184,7 @@ function SimpleCoords_MapIcon_Update(self, elapsed)
         end
       end -- showing_arrow
     end  -- haveArrived
-    Simple_Coords_Map_SecondsSinceUpdate = 0;
+    SCoordsAddon.seconds_since_map_update = 0;
 	end
 end
 
@@ -278,9 +199,9 @@ end
 -- Tooltips:
 --------------
 
-function SimpleCoords_ShowTooltip()
+function SCoordsAddon.ShowTooltip()
 	local tooltipList ={};
-	GameTooltip:SetOwner(getglobal("SimpleCoordsFrame") , "ANCHOR_CURSOR", -5, 5);
+	GameTooltip:SetOwner(_G["SimpleCoordsFrame"] , "ANCHOR_CURSOR", -5, 5);
 	-- GameTooltip:SetOwner(owner, "anchor"[, +x, +y]);
 	--GameTooltip:AddLine("test", .6,1.0,.8); -- GameTooltip:AddLine(name, GameTooltip_UnitColor("player"));\
 	GameTooltip:AddLine('SimpleCoords',.6,1.0,.8);
@@ -295,7 +216,7 @@ end
 
 
 
-function SimpleCoords_HideTooltip()
+function SCoordsAddon.HideTooltip()
 	GameTooltip:Hide();
 end
 
@@ -303,17 +224,6 @@ end
 
 
 
-function SimpleCoordsEnter_ShowTooltip()
-	local tooltipList ={};
-	GameTooltip:SetOwner(getglobal("SimpleCoordsFrame") , "ANCHOR_CURSOR", -5, 5);
-	-- GameTooltip:SetOwner(owner, "anchor"[, +x, +y]);
-	--GameTooltip:AddLine("test", .6,1.0,.8); -- GameTooltip:AddLine(name, GameTooltip_UnitColor("player"));\
-	GameTooltip:AddLine('SimpleCoords',.6,1.0,.8);
-	GameTooltip:AddLine('TAB to switch fields.');
-	GameTooltip:AddLine('Click current coordinates to close edit.');
-	GameTooltip:AddLine('ENTER to place dot at coordinates.');
-	GameTooltip:Show();
-end
 
 
 
@@ -327,42 +237,187 @@ end
 
 -- Move this glue to a separate file?
 function SimpleCoords_GetPlayerZoneCoords()
-    local x, y, UiMapID, UiMapType = hbd:GetPlayerZonePosition();
+    local x, y, UiMapID, UiMapType = SCoordsAddon.hbd:GetPlayerZonePosition();
     return  x, y, UiMapID, UiMapType;
 end
 
 
 function AddMinimapIcon(icon, x, y, uiMapID)
-  pins:AddMinimapIconMap(MINIMAP_ICON_NAME, icon, uiMapID, x, y, true, true) -- showInParentZone, floatOnEdge
+  SCoordsAddon.pins:AddMinimapIconMap(SCoordsAddon.minimapIcon, icon, uiMapID, x, y, true, true) -- showInParentZone, floatOnEdge
 end
 
-function AddWorldMapIcon(icon, uiMapID, x, y)
-  pins:AddWorldMapIconMap(WORLDMAP_ICON_NAME, icon, uiMapID, x, y, HBD_PINS_WORLDMAP_SHOW_PARENT); -- ref, icon, uiMapID, x, y, showFlag)
+function SCoordsAddon.AddWorldMapIcon(icon, uiMapID, x, y)
+  SCoordsAddon.pins:AddWorldMapIconMap(SCoordsAddon.worldTarget, icon, uiMapID, x, y, HBD_PINS_WORLDMAP_SHOW_PARENT); -- ref, icon, uiMapID, x, y, showFlag)
 end
 
 
-function SimpleCoordsRemoveIcons()
+function SCoordsAddon.RemoveIcons()
   -- Remove both the minimap and worldmap icons
-  RemoveMinimapIcon(minimapIcon)
-  RemoveWorldMapIcon(worldTarget)
+  SCoordsAddon.RemoveMinimapIcon(SCoordsAddon.minimapIcon)
+  SCoordsAddon.RemoveWorldMapIcon(SCoordsAddon.worldTarget)
 end
 
-function RemoveWorldMapIcon(icon)
-  pins:RemoveWorldMapIcon(WORLDMAP_ICON_NAME, icon)
+function SCoordsAddon.RemoveWorldMapIcon(icon)
+  SCoordsAddon.pins:RemoveWorldMapIcon(SCoordsAddon.WORLDMAP_ICON_NAME, icon)
 end
 
 
-function RemoveMinimapIcon(icon)
-  pins:RemoveMinimapIcon(MINIMAP_ICON_NAME, icon)
+function SCoordsAddon.RemoveMinimapIcon(icon)
+  SCoordsAddon.pins:RemoveMinimapIcon(SCoordsAddon.MINIMAP_ICON_NAME, icon)
 end
 
-function IsMinimapIconOnEdge(icon)
-  local t = pins:IsMinimapIconOnEdge(icon)
+function SCoordsAddon.IsMinimapIconOnEdge(icon)
+  local t = SCoordsAddon.pins:IsMinimapIconOnEdge(icon)
   return t;
 end
 
-function GetVectorToIcon(icon)
+function SCoordsAddon.GetVectorToIcon(icon)
   -- return anggle and distance
-  local angle, distance = pins:GetVectorToIcon(icon);
+  local angle, distance = SCoordsAddon.pins:GetVectorToIcon(icon);
   return angle, distance;
 end
+
+
+
+-- ----------------------------------
+function SCoordsAddon.OnUpdate(self, elapsed)
+--
+-- Updates the coordinate display
+--
+-- Uses HEARTBEAT_INTERVAL to limit how often the display is updated
+-- params:
+-- self
+-- elapsed incrementing timer (second resolution)
+--
+-- globals:
+-- zone_dirty bool need to refresh location information (after a login or zone change)
+--
+
+	SCoordsAddon.seconds_since_update = SCoordsAddon.seconds_since_update + elapsed;
+	if (SCoordsAddon.seconds_since_update > HEARTBEAT_INTERVAL) then
+	  if (zone_dirty) then -- right now, this only happens the first time. This test may no longer be needed.
+	    -- SetMapToCurrentZone();
+	    zone_dirty = false;
+	  end
+		-- local x, y = hbd:GetPlayerWorldPosition();
+		local x, y, UiMapID, UiMapType = SCoordsAddon.hbd:GetPlayerZonePosition();
+
+		-- if x and y and x > 0 and y > 0 then
+		if x and y and x > 0 and y > 0 then
+      Simple_CoordsText:SetText(format( "%.1f, %.1f", x * 100, y * 100));
+		else
+			Simple_CoordsText:SetText("---");
+			minimapIcon.dot:Hide();
+		end
+		SCoordsAddon.seconds_since_update=0;
+	end -- if
+end
+
+
+
+
+--- Once the addon is loaded, register all our events and create our frames
+--
+function SCoordsAddon.init(event, addon)
+	if event == "ADDON_LOADED" and addon == "SimpleCoords" then
+		DEFAULT_CHAT_FRAME:AddMessage("HELLLLLO",  0.5, 1.0, 0.5, 1); -- leave for testing
+
+		if ( false == SCoordsAddon.addon_loaded ) then -- only need to load once
+			SCoordsAddon.addon_loaded = true;
+
+
+				-- Here Be Dragons stuff:
+				SCoordsAddon.hbd = LibStub("HereBeDragons-2.0")
+				SCoordsAddon.pins = LibStub("HereBeDragons-Pins-2.0")
+				DEFAULT_CHAT_FRAME:AddMessage("HereBeDragons loaded",  0.5, 1.0, 0.5, 1); -- leave for testing
+
+
+				-- create the dot: (encapsulated as an obbject in case we want to reuse it
+				-- minimapIcon=CreateFrame("Button", nil, Minimap)
+				local mini = CreateFrame("Button", "SimpleCoordsDotFrame", Minimap);
+
+				mini:SetHeight(12);
+				mini:SetWidth(12);
+				local texture = mini:CreateTexture();
+				texture:SetTexture("Interface\\AddOns\\SimpleCoords\\images\\redbull");
+				texture:SetAllPoints();
+				mini.dot = texture;
+				--minimapIcon.dot:Hide() -- start  hidden
+				--minimapIcon.dot:Show();
+			--	mini:SetScript("OnUpdate", SimpleCoords_MapIcon_Update)
+
+
+			-- create the arrow:
+				mini.arrow = mini:CreateTexture("BACKGROUND")
+			 -- minimapIcon.arrow:SetTexture("Interface\\AddOns\\SimpleCoords\\images\\mmarrow")
+				mini.arrow:SetTexture("Interface\\Minimap\\Minimap-QuestArrow")
+				mini.arrow:SetPoint("CENTER", 0 ,0)
+				mini.arrow:SetHeight(40) -- 32?
+				mini.arrow:SetWidth(40)
+				mini.arrow:Hide()
+				SCoordsAddon.minimapIcon = mini;
+
+				if (showWorldMapIcon) then
+					local world_dot = CreateFrame("Button", "SimpleCoordsWorldTargetFrame",WorldMapDetailFrame );
+
+					world_dot:SetWidth(16)
+					world_dot:SetHeight(16)
+
+					world_dot.icon = world_dot:CreateTexture("ARTWORK")
+					world_dot.icon:SetAllPoints()
+					world_dot.icon:SetTexture("Interface\\AddOns\\SimpleCoords\\images\\redbull")
+					SCoordsAddon.worldTarget= world_dot;
+
+
+			end
+
+
+
+			-- Register all our events:
+			SCoordsAddon.eventframe = CreateFrame("Frame" ); -- the frame to listen to all our events
+			local ev = SCoordsAddon.eventframe; -- local shortcut
+
+			-- and register our basic events:
+			ev:RegisterEvent("PLAYER_ENTERING_WORLD");
+			ev:RegisterEvent("CHAT_MSG_CHANNEL");
+		--	ev:RegisterEvent("VARIABLES_LOADED");
+		--	ev:RegisterEvent("UPDATE_BINDINGS");
+		--	ev:RegisterEvent("PLAYER_LEAVE_COMBAT");
+		--	ev:RegisterEvent("PLAYER_REGEN_ENABLED");
+
+			-- self:RegisterEvent("CHAT_MSG_TEXT_EMOTE"); -- for listening
+			ev:SetScript("OnEvent", SCoordsAddon.HandleEvent);
+
+		end --SCoordsAddon.addon_loaded
+	end -- ADDON_LOADED
+end
+
+
+--- Main WoW Event handler
+ function SassAddon.HandleEvent(frame, event, ...)
+--	DEFAULT_CHAT_FRAME:AddMessage('event ' .. event,  0.5, 1.0, 0.5, 1);
+	local eventHandled = false;
+
+
+-- VARIABLES_LOADED
+-- ================
+
+	if ( event == "VARIABLES_LOADED" ) then -- sounds like variables_loaded events should be ADDON_LOADED
+		eventHandled = true; -- record that we have been loaded:
+	end -- ( event == "VARIABLES_LOADED" )
+
+
+--	if (eventHandled == false and ((event == "PLAYER_LEAVE_COMBAT") or (event == "PLAYER_REGEN_ENABLED"))) then
+
+
+-- event handled?
+
+
+	if (eventHandled == false) then
+		-- msgText = string.lower(arg1);
+	end
+
+
+
+
+end -- end of function

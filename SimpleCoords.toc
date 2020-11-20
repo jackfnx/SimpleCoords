@@ -7,7 +7,7 @@
 ## OptionalDeps:
 ## DefaultState: enabled
 ## SavedVariables:
-# libs\LibStub\LibStub.lua included in HereBeDragons?
+libs\LibStub\LibStub.lua
 libs\HereBeDragons\HereBeDragons-2.0.lua
 libs\HereBeDragons\HereBeDragons-Pins-2.0.lua
 SimpleCoords.lua

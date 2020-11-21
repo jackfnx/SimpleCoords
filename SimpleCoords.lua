@@ -20,7 +20,9 @@ SCoordsAddon = {
 	world_ref = "SimpleCoordsW",
 
 	HALF_PI = math.pi / 2,
-	ROOT_HALF = math.sqrt(0.5)
+	ROOT_HALF = math.sqrt(0.5),
+	HEARTBEAT_INTERVAL = 0.5; -- how many seconds per heartbeat of our internal timer
+
 
 }
 
@@ -130,14 +132,15 @@ end
 -- @number elapsed incrementing timer (second resolution)
 --
 function SimpleCoords_MapIcon_Update(self, elapsed)
+--	DEFAULT_CHAT_FRAME:AddMessage("elapsed" .. elapsed .. "  " .. SCoordsAddon.seconds_since_map_update ,  0.8, 1.0, 0.5, 1);
 
   SCoordsAddon.seconds_since_map_update = SCoordsAddon.seconds_since_map_update + elapsed;
 
-	if (SCoordsAddon.seconds_since_map_update > HEARTBEAT_INTERVAL) then
+	if (SCoordsAddon.seconds_since_map_update > SCoordsAddon.HEARTBEAT_INTERVAL) then
 	  if haveArrived ~= true then
 	  -- if the panel is open, but we "have arrived" don't bother to update hidden things
 
-    local on_edge = IsMinimapIconOnEdge(minimapIcon)  --	local edge = Astrolabe:IsIconOnEdge(self)
+    local on_edge = SCoordsAddon.IsMinimapIconOnEdge(minimapIcon)  --	local edge = Astrolabe:IsIconOnEdge(self)
     local showing_dot = self.dot:IsShown()
     local showing_arrow = self.arrow:IsShown()
 
@@ -285,9 +288,7 @@ end
 
 
 
--- ----------------------------------
-function SCoordsAddon.OnUpdate(self, elapsed)
---
+---
 -- Updates the coordinate display
 --
 -- Uses HEARTBEAT_INTERVAL to limit how often the display is updated
@@ -298,9 +299,12 @@ function SCoordsAddon.OnUpdate(self, elapsed)
 -- globals:
 -- zone_dirty bool need to refresh location information (after a login or zone change)
 --
+function SCoordsAddon.OnUpdate(self, elapsed)
+
+--DEFAULT_CHAT_FRAME:AddMessage("elapsed" .. elapsed .. "  " .. SCoordsAddon.seconds_since_map_update ,  0.8, 1.0, 0.5, 1);
 
 	SCoordsAddon.seconds_since_update = SCoordsAddon.seconds_since_update + elapsed;
-	if (SCoordsAddon.seconds_since_update > HEARTBEAT_INTERVAL) then
+	if (SCoordsAddon.seconds_since_update > SCoordsAddon.HEARTBEAT_INTERVAL) then
 	  if (zone_dirty) then -- right now, this only happens the first time. This test may no longer be needed.
 	    -- SetMapToCurrentZone();
 	    zone_dirty = false;
@@ -331,7 +335,8 @@ function SCoordsAddon.init(event, addon)
 		if ( false == SCoordsAddon.addon_loaded ) then -- only need to load once
 			SCoordsAddon.addon_loaded = true;
 
-
+			local f = _G["SimpleCoordsFrame"];
+			f:HookScript("OnUpdate", SCoordsAddon.OnUpdate);
 
 
 				-- create the dot: (encapsulated as an obbject in case we want to reuse it
@@ -346,7 +351,7 @@ function SCoordsAddon.init(event, addon)
 				mini.dot = texture;
 				--minimapIcon.dot:Hide() -- start  hidden
 				--minimapIcon.dot:Show();
-			--	mini:SetScript("OnUpdate", SimpleCoords_MapIcon_Update)
+				mini:SetScript("OnUpdate", SimpleCoords_MapIcon_Update)
 
 
 			-- create the arrow:

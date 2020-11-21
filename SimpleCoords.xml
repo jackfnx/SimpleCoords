@@ -127,7 +127,7 @@
 			SCoordsAddon.HideTooltip();
 		</OnLeave>
 
-	<!--	<OnUpdate function="SCoordsAddon.OnUpdate"/> -->
+		<OnUpdate script="SCoordsAddon_OnUpdate"/>
 
 		<OnMouseDown>
 			if ( IsShiftKeyDown() ) then

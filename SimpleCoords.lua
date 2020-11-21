@@ -1,3 +1,4 @@
+
 -- Globals:
 -- ========
 -- our big global object:
@@ -12,18 +13,22 @@ SCoordsAddon = {
 	haveArrived=false,
 	dest_x = -1000,
 	dest_y = -1000,
-	showWorldMapIcon = true,
 	zone_dirty = true,
 
 	-- Constants:
-	MINIMAP_ICON_NAME = "SimpleCoords",
-	WORLDMAP_ICON_NAME = "SimpleCoordsW",
+	mini_ref = "SimpleCoords",
+	world_ref = "SimpleCoordsW",
 
 	HALF_PI = math.pi / 2,
 	ROOT_HALF = math.sqrt(0.5)
 
-
 }
+
+-- Here Be Dragons stuff:
+SCoordsAddon.hbd = LibStub("HereBeDragons-2.0")
+SCoordsAddon.pins = LibStub("HereBeDragons-Pins-2.0")
+
+DEFAULT_CHAT_FRAME:AddMessage("HereBeDragons loaded",  0.5, 1.0, 0.5, 1); -- leave for testing
 
 -- boot frame:
 local boot_frame = CreateFrame("Frame")
@@ -102,7 +107,7 @@ function SCoordsAddon.AcceptValue()
       -- minimap
       local playerZoneX, playerZoneY, uiMapID = SimpleCoords_GetPlayerZoneCoords();
 
-      AddMinimapIcon(SCoordsAddon.minimapIcon, dest_x, dest_y, uiMapID ) --icon, x, y, uiMapID
+      SCoordsAddon.AddMinimapIcon(SCoordsAddon.minimapIcon, dest_x, dest_y, uiMapID ) --icon, x, y, uiMapID
 
       -- add world map
       -- DEFAULT_CHAT_FRAME:AddMessage("mapID: " .. mapID ,  0.8, 1.0, 0.5, 1);
@@ -242,17 +247,18 @@ function SimpleCoords_GetPlayerZoneCoords()
 end
 
 
-function AddMinimapIcon(icon, x, y, uiMapID)
-  SCoordsAddon.pins:AddMinimapIconMap(SCoordsAddon.minimapIcon, icon, uiMapID, x, y, true, true) -- showInParentZone, floatOnEdge
+function SCoordsAddon.AddMinimapIcon(icon, x, y, uiMapID)
+  SCoordsAddon.pins:AddMinimapIconMap(SCoordsAddon.mini_ref, icon, uiMapID, x, y, true, true) -- showInParentZone, floatOnEdge
 end
 
 function SCoordsAddon.AddWorldMapIcon(icon, uiMapID, x, y)
-  SCoordsAddon.pins:AddWorldMapIconMap(SCoordsAddon.worldTarget, icon, uiMapID, x, y, HBD_PINS_WORLDMAP_SHOW_PARENT); -- ref, icon, uiMapID, x, y, showFlag)
+  SCoordsAddon.pins:AddWorldMapIconMap(SCoordsAddon.world_ref, icon, uiMapID, x, y, HBD_PINS_WORLDMAP_SHOW_PARENT); -- ref, icon, uiMapID, x, y, showFlag)
 end
 
 
 function SCoordsAddon.RemoveIcons()
   -- Remove both the minimap and worldmap icons
+	-- maybe just hide?
   SCoordsAddon.RemoveMinimapIcon(SCoordsAddon.minimapIcon)
   SCoordsAddon.RemoveWorldMapIcon(SCoordsAddon.worldTarget)
 end
@@ -326,10 +332,6 @@ function SCoordsAddon.init(event, addon)
 			SCoordsAddon.addon_loaded = true;
 
 
-				-- Here Be Dragons stuff:
-				SCoordsAddon.hbd = LibStub("HereBeDragons-2.0")
-				SCoordsAddon.pins = LibStub("HereBeDragons-Pins-2.0")
-				DEFAULT_CHAT_FRAME:AddMessage("HereBeDragons loaded",  0.5, 1.0, 0.5, 1); -- leave for testing
 
 
 				-- create the dot: (encapsulated as an obbject in case we want to reuse it
@@ -357,20 +359,14 @@ function SCoordsAddon.init(event, addon)
 				mini.arrow:Hide()
 				SCoordsAddon.minimapIcon = mini;
 
-				if (showWorldMapIcon) then
 					local world_dot = CreateFrame("Button", "SimpleCoordsWorldTargetFrame",WorldMapDetailFrame );
 
 					world_dot:SetWidth(16)
 					world_dot:SetHeight(16)
-
 					world_dot.icon = world_dot:CreateTexture("ARTWORK")
 					world_dot.icon:SetAllPoints()
 					world_dot.icon:SetTexture("Interface\\AddOns\\SimpleCoords\\images\\redbull")
 					SCoordsAddon.worldTarget= world_dot;
-
-
-			end
-
 
 
 			-- Register all our events:

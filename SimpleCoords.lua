@@ -83,7 +83,7 @@ function SCoordsAddon.AcceptValue()
 -- This function is attached to the OnEnterPressed handlers for those frames.
 
     -- clear any existing icon(s), since we have new coords:
-    SCoordsAddon.RemoveIcons()
+    SCoordsAddon.RemoveIcons();
 
   if (_G["SimpleCoords_X"]:GetText() == "" and _G["SimpleCoords_Y"]:GetText() == "") then
     SCoordsAddon.TogglePanel();
@@ -135,17 +135,27 @@ function SimpleCoords_MapIcon_Update(self, elapsed)
 --	DEFAULT_CHAT_FRAME:AddMessage("elapsed" .. elapsed .. "  " .. SCoordsAddon.seconds_since_map_update ,  0.8, 1.0, 0.5, 1);
 
   SCoordsAddon.seconds_since_map_update = SCoordsAddon.seconds_since_map_update + elapsed;
+	local root_half = SCoordsAddon.ROOT_HALF;
 
 	if (SCoordsAddon.seconds_since_map_update > SCoordsAddon.HEARTBEAT_INTERVAL) then
 	  if haveArrived ~= true then
 	  -- if the panel is open, but we "have arrived" don't bother to update hidden things
 
-    local on_edge = SCoordsAddon.IsMinimapIconOnEdge(minimapIcon)  --	local edge = Astrolabe:IsIconOnEdge(self)
+    local on_edge = SCoordsAddon.IsMinimapIconOnEdge(SCoordsAddon.minimapIcon)  --	local edge = Astrolabe:IsIconOnEdge(self)
     local showing_dot = self.dot:IsShown()
     local showing_arrow = self.arrow:IsShown()
 
     if on_edge then
      -- DEFAULT_CHAT_FRAME:AddMessage("EDGE",  0.8, 1.0, 0.5, 1);
+		 -- debuggin the edge:
+			local edge_msg = "showing:";
+			if showing_dot then
+				edge_msg = edge_msg .. " dot";
+			end
+			if showing_arrow then
+				edge_msg = edge_msg .. " arrow";
+			end
+			DEFAULT_CHAT_FRAME:AddMessage(edge_msg,  0.8, 1.0, 0.5, 1);
     else
      -- DEFAULT_CHAT_FRAME:AddMessage("UPDATE",  0.8, 1.0, 0.5, 1);
     end
@@ -153,15 +163,15 @@ function SimpleCoords_MapIcon_Update(self, elapsed)
       if (on_edge and not showing_arrow) then
         self.arrow:Show()
         self.dot:Hide()
-        -- DEFAULT_CHAT_FRAME:AddMessage("TO ARROW",  0.8, 1.0, 0.5, 1);
+        DEFAULT_CHAT_FRAME:AddMessage("TO ARROW",  0.8, 1.0, 0.5, 1);
       elseif not on_edge and not showing_dot then
         self.dot:Show()
         self.arrow:Hide()
-        -- DEFAULT_CHAT_FRAME:AddMessage("TO DOT",  0.8, 1.0, 0.5, 1);
+        DEFAULT_CHAT_FRAME:AddMessage("TO DOT",  0.8, 1.0, 0.5, 1);
       end
 
 
-   local angle,distance = SCoordsAddon.pins:GetVectorToIcon(minimapIcon) --	local angle = Astrolabe:GetDirectionToIcon(minimapIcon)
+   local angle,distance = SCoordsAddon.pins:GetVectorToIcon(self) --	local angle = Astrolabe:GetDirectionToIcon(minimapIcon)
    if (distance ~= nil) then
     if (distance < 10) then
       if (not haveArrived) then
@@ -184,7 +194,7 @@ function SimpleCoords_MapIcon_Update(self, elapsed)
                 angle = angle - minimap_rot
             end
 
-          local sin,cos = math.sin(angle) * ROOT_HALF, math.cos(angle) * ROOT_HALF
+          local sin,cos = math.sin(angle) * root_half, math.cos(angle) * root_half
           self.arrow:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
 
         else
@@ -227,8 +237,6 @@ end
 function SCoordsAddon.HideTooltip()
 	GameTooltip:Hide();
 end
-
-
 
 
 
@@ -301,7 +309,6 @@ end
 --
 function SCoordsAddon.OnUpdate(self, elapsed)
 
---DEFAULT_CHAT_FRAME:AddMessage("elapsed" .. elapsed .. "  " .. SCoordsAddon.seconds_since_map_update ,  0.8, 1.0, 0.5, 1);
 
 	SCoordsAddon.seconds_since_update = SCoordsAddon.seconds_since_update + elapsed;
 	if (SCoordsAddon.seconds_since_update > SCoordsAddon.HEARTBEAT_INTERVAL) then
@@ -330,7 +337,6 @@ end
 --
 function SCoordsAddon.init(event, addon)
 	if event == "ADDON_LOADED" and addon == "SimpleCoords" then
-		DEFAULT_CHAT_FRAME:AddMessage("HELLLLLO",  0.5, 1.0, 0.5, 1); -- leave for testing
 
 		if ( false == SCoordsAddon.addon_loaded ) then -- only need to load once
 			SCoordsAddon.addon_loaded = true;

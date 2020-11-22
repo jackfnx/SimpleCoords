@@ -30,8 +30,6 @@ SCoordsAddon = {
 SCoordsAddon.hbd = LibStub("HereBeDragons-2.0")
 SCoordsAddon.pins = LibStub("HereBeDragons-Pins-2.0")
 
-DEFAULT_CHAT_FRAME:AddMessage("HereBeDragons loaded",  0.5, 1.0, 0.5, 1); -- leave for testing
-
 -- boot frame:
 local boot_frame = CreateFrame("Frame")
 boot_frame:RegisterEvent("ADDON_LOADED")
@@ -147,15 +145,6 @@ function SimpleCoords_MapIcon_Update(self, elapsed)
 
     if on_edge then
      -- DEFAULT_CHAT_FRAME:AddMessage("EDGE",  0.8, 1.0, 0.5, 1);
-		 -- debuggin the edge:
-			local edge_msg = "showing:";
-			if showing_dot then
-				edge_msg = edge_msg .. " dot";
-			end
-			if showing_arrow then
-				edge_msg = edge_msg .. " arrow";
-			end
-			DEFAULT_CHAT_FRAME:AddMessage(edge_msg,  0.8, 1.0, 0.5, 1);
     else
      -- DEFAULT_CHAT_FRAME:AddMessage("UPDATE",  0.8, 1.0, 0.5, 1);
     end
@@ -163,11 +152,11 @@ function SimpleCoords_MapIcon_Update(self, elapsed)
       if (on_edge and not showing_arrow) then
         self.arrow:Show()
         self.dot:Hide()
-        DEFAULT_CHAT_FRAME:AddMessage("TO ARROW",  0.8, 1.0, 0.5, 1);
+        -- DEFAULT_CHAT_FRAME:AddMessage("TO ARROW",  0.8, 1.0, 0.5, 1);
       elseif not on_edge and not showing_dot then
         self.dot:Show()
         self.arrow:Hide()
-        DEFAULT_CHAT_FRAME:AddMessage("TO DOT",  0.8, 1.0, 0.5, 1);
+        -- DEFAULT_CHAT_FRAME:AddMessage("TO DOT",  0.8, 1.0, 0.5, 1);
       end
 
 

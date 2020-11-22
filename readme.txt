@@ -1,4 +1,4 @@
-SimpleCoords v4.31
+SimpleCoords v4.32
 
 Description
 ===========
@@ -40,6 +40,9 @@ To-Do:
 
 VERSION HISTORY
 ===============
+Nov 22, 2020 (4.32)
+* Remove debugging messages
+
 Nov 19, 2020 (4.31)
 * Updated TOC and version for WoW 9.02 (Shadowlands)
 * Reorganized library folder

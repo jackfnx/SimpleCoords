@@ -73,12 +73,11 @@ end
 
 
 
-
-function SCoordsAddon.AcceptValue()
---
+---
 -- Called when ENTERing new values in the coordinate window
 -- Reads the values in SimpleCoords_X and SimpleCoords_Y text input frames (Still defined in the XML)
 -- This function is attached to the OnEnterPressed handlers for those frames.
+function SCoordsAddon.AcceptValue()
 
     -- clear any existing icon(s), since we have new coords:
     SCoordsAddon.RemoveIcons();
@@ -107,12 +106,12 @@ function SCoordsAddon.AcceptValue()
       -- minimap
       local playerZoneX, playerZoneY, uiMapID = SimpleCoords_GetPlayerZoneCoords();
 
-      SCoordsAddon.AddMinimapIcon(SCoordsAddon.minimapIcon, dest_x, dest_y, uiMapID ) --icon, x, y, uiMapID
+      SCoordsAddon.AddMinimapIcon( SCoordsAddon.minimapIcon, dest_x, dest_y, uiMapID ) --icon, x, y, uiMapID
 
       -- add world map
       -- DEFAULT_CHAT_FRAME:AddMessage("mapID: " .. mapID ,  0.8, 1.0, 0.5, 1);
       SCoordsAddon.AddWorldMapIcon(SCoordsAddon.worldTarget, uiMapID, dest_x, dest_y);
-      haveArrived=false;
+      SCoordsAddon.haveArrived=false;
 
     end
 
@@ -130,70 +129,73 @@ end
 -- @number elapsed incrementing timer (second resolution)
 --
 function SimpleCoords_MapIcon_Update(self, elapsed)
---	DEFAULT_CHAT_FRAME:AddMessage("elapsed" .. elapsed .. "  " .. SCoordsAddon.seconds_since_map_update ,  0.8, 1.0, 0.5, 1);
-
-  SCoordsAddon.seconds_since_map_update = SCoordsAddon.seconds_since_map_update + elapsed;
+	--	DEFAULT_CHAT_FRAME:AddMessage("elapsed" .. elapsed .. "  " .. SCoordsAddon.seconds_since_map_update ,  0.8, 1.0, 0.5, 1);
+	local pins = SCoordsAddon.pins;
+	local f = SCoordsAddon.minimapIcon;
 	local root_half = SCoordsAddon.ROOT_HALF;
+	local angle, distance, sin, cos, on_edge, showing_dot, showing_arrow ;
+	SCoordsAddon.seconds_since_map_update = SCoordsAddon.seconds_since_map_update + elapsed;
 
-	if (SCoordsAddon.seconds_since_map_update > SCoordsAddon.HEARTBEAT_INTERVAL) then
-	  if haveArrived ~= true then
-	  -- if the panel is open, but we "have arrived" don't bother to update hidden things
+	if SCoordsAddon.seconds_since_map_update > SCoordsAddon.HEARTBEAT_INTERVAL then
+	  if true ~= SCoordsAddon.haveArrived then
+		  -- if the panel is open, but we "have arrived" don't bother to update hidden things
+	    on_edge = pins:IsMinimapIconOnEdge(f);  --	local edge = Astrolabe:IsIconOnEdge(self)
+	    showing_dot = f.dot:IsShown();
+	    showing_arrow = f.arrow:IsShown();
+			angle,distance = pins:GetVectorToIcon(f) --	local angle = Astrolabe:GetDirectionToIcon(minimapIcon)
 
-    local on_edge = SCoordsAddon.IsMinimapIconOnEdge(SCoordsAddon.minimapIcon)  --	local edge = Astrolabe:IsIconOnEdge(self)
-    local showing_dot = self.dot:IsShown()
-    local showing_arrow = self.arrow:IsShown()
+			-- check to see if we've arrived
+			if (distance ~= nil) then
+				if (distance < 10) then
+						DEFAULT_CHAT_FRAME:AddMessage("You have arrived.",  0.8, 1.0, 0.5, 1); -- let them now they have arrived
+						-- remove the icons
+						SCoordsAddon.RemoveIcons();
+						SCoordsAddon.haveArrived = true;
+						event_complete = false;
+				end -- distance < 10)
+			end -- have a distance value
 
-    if on_edge then
-     -- DEFAULT_CHAT_FRAME:AddMessage("EDGE",  0.8, 1.0, 0.5, 1);
-    else
-     -- DEFAULT_CHAT_FRAME:AddMessage("UPDATE",  0.8, 1.0, 0.5, 1);
-    end
+			-- after checking to see if we've arrived, see if we need to update
 
-      if (on_edge and not showing_arrow) then
-        self.arrow:Show()
-        self.dot:Hide()
-        -- DEFAULT_CHAT_FRAME:AddMessage("TO ARROW",  0.8, 1.0, 0.5, 1);
-      elseif not on_edge and not showing_dot then
-        self.dot:Show()
-        self.arrow:Hide()
-        -- DEFAULT_CHAT_FRAME:AddMessage("TO DOT",  0.8, 1.0, 0.5, 1);
-      end
+			if true ~= SCoordsAddon.haveArrived then
 
+				-- Inside the circle:
+				if not on_edge then
+					if not showing_dot then
+						f.dot:Show();
+						f.arrow:Hide();
+						--DEFAULT_CHAT_FRAME:AddMessage("TO DOT",  0.8, 1.0, 0.5, 1);
+					end
 
-   local angle,distance = SCoordsAddon.pins:GetVectorToIcon(self) --	local angle = Astrolabe:GetDirectionToIcon(minimapIcon)
-   if (distance ~= nil) then
-    if (distance < 10) then
-      if (not haveArrived) then
-        DEFAULT_CHAT_FRAME:AddMessage("You have arrived.",  0.8, 1.0, 0.5, 1); -- let them now they have arrived
-        -- remove the icons
-        SCoordsAddon.RemoveIcons();
-        haveArrived = true;
-        event_complete = false;
-      end -- haveArrived
-    end -- distance < 10)
-   end
+				else -- on the edge:
+					if not showing_arrow then
+						f.arrow:Show();
+						f.dot:Hide();
+						--DEFAULT_CHAT_FRAME:AddMessage("TO ARROW",  0.8, 1.0, 0.5, 1);
+					end
 
+	        if (angle ~= nil) then
+		        angle = angle + math.rad(135); -- math.rad converts degrees to radians 45 past 90 in this case
 
-      if showing_arrow then
-        if (angle ~= nil) then
-        angle = angle + math.rad(135) -- math.rad converts degrees to radians 45 past 90 in this case
-        -- if they have the rotating minimap enabled, we have to adjust our angle:
-          if GetCVar("rotateMinimap") == "1" then
-                local minimap_rot = GetPlayerFacing()
-                angle = angle - minimap_rot
-            end
+						if GetCVar("rotateMinimap") == "1" then -- if they have the rotating minimap enabled, we have to adjust our angle
+							angle = angle - GetPlayerFacing();
+						end
 
-          local sin,cos = math.sin(angle) * root_half, math.cos(angle) * root_half
-          self.arrow:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
+	          sin,cos = math.sin(angle) * root_half, math.cos(angle) * root_half;
+	          f.arrow:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
 
-        else
-          self:Hide() -- an error getting the angle to the icon. so just hide it?
-        end
-      end -- showing_arrow
+	        else
+	          f:Hide() -- an error getting the angle to the icon. so just hide it?
+	        end
+
+				end -- on the edge or in the circle
+
+			end
     end  -- haveArrived
-    SCoordsAddon.seconds_since_map_update = 0;
-	end
-end
+    SCoordsAddon.seconds_since_map_update = 0; -- reset the counter
+
+	end -- the heartbeat throttle
+end -- SimpleCoords_MapIcon_Update()
 
 
 
@@ -255,12 +257,11 @@ function SCoordsAddon.AddWorldMapIcon(icon, uiMapID, x, y)
   SCoordsAddon.pins:AddWorldMapIconMap(SCoordsAddon.world_ref, icon, uiMapID, x, y, HBD_PINS_WORLDMAP_SHOW_PARENT); -- ref, icon, uiMapID, x, y, showFlag)
 end
 
-
+---
+-- Remove both the minimap and worldmap icons
 function SCoordsAddon.RemoveIcons()
-  -- Remove both the minimap and worldmap icons
-	-- maybe just hide?
-  SCoordsAddon.RemoveMinimapIcon(SCoordsAddon.minimapIcon)
-  SCoordsAddon.RemoveWorldMapIcon(SCoordsAddon.worldTarget)
+  SCoordsAddon.pins:RemoveMinimapIcon(SCoordsAddon.mini_ref, SCoordsAddon.minimapIcon)
+  SCoordsAddon.pins:RemoveWorldMapIcon(SCoordsAddon.world_ref, SCoordsAddon.worldTarget)
 end
 
 function SCoordsAddon.RemoveWorldMapIcon(icon)
@@ -297,8 +298,6 @@ end
 -- zone_dirty bool need to refresh location information (after a login or zone change)
 --
 function SCoordsAddon.OnUpdate(self, elapsed)
-
-
 	SCoordsAddon.seconds_since_update = SCoordsAddon.seconds_since_update + elapsed;
 	if (SCoordsAddon.seconds_since_update > SCoordsAddon.HEARTBEAT_INTERVAL) then
 	  if (zone_dirty) then -- right now, this only happens the first time. This test may no longer be needed.
@@ -313,10 +312,10 @@ function SCoordsAddon.OnUpdate(self, elapsed)
       Simple_CoordsText:SetText(format( "%.1f, %.1f", x * 100, y * 100));
 		else
 			Simple_CoordsText:SetText("---");
-			minimapIcon.dot:Hide();
+			SCoordsAddon.minimapIcon.dot:Hide();
 		end
 		SCoordsAddon.seconds_since_update=0;
-	end -- if
+	end -- heartbeat
 end
 
 
@@ -390,30 +389,18 @@ end
 
 
 --- Main WoW Event handler
- function SassAddon.HandleEvent(frame, event, ...)
---	DEFAULT_CHAT_FRAME:AddMessage('event ' .. event,  0.5, 1.0, 0.5, 1);
+function SassAddon.HandleEvent(frame, event, ...)
+	--	DEFAULT_CHAT_FRAME:AddMessage('event ' .. event,  0.5, 1.0, 0.5, 1);
 	local eventHandled = false;
 
-
--- VARIABLES_LOADED
--- ================
-
-	if ( event == "VARIABLES_LOADED" ) then -- sounds like variables_loaded events should be ADDON_LOADED
+	if "VARIABLES_LOADED" == event then -- sounds like variables_loaded events should be ADDON_LOADED
 		eventHandled = true; -- record that we have been loaded:
-	end -- ( event == "VARIABLES_LOADED" )
+	end
 
+	--	if (eventHandled == false and ((event == "PLAYER_LEAVE_COMBAT") or (event == "PLAYER_REGEN_ENABLED"))) then
 
---	if (eventHandled == false and ((event == "PLAYER_LEAVE_COMBAT") or (event == "PLAYER_REGEN_ENABLED"))) then
-
-
--- event handled?
-
-
-	if (eventHandled == false) then
+	if false == eventHandled then
 		-- msgText = string.lower(arg1);
 	end
 
-
-
-
-end -- end of function
+end -- HandleEvent()

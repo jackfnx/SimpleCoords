@@ -5,7 +5,7 @@
 ## Author: Schnoggo
 ##
 ## X-Curse-Project-ID: 298475
-## X-WoWI-ID: 7814
+## X-WoWI-ID: 7816
 ##
 ## Dependencies:
 ## OptionalDeps:

@@ -40,6 +40,10 @@ To-Do:
 
 VERSION HISTORY
 ===============
+Nov 23, 2020 (4.33)
+* Fix error when hiding the map dot
+* Fix heartbeat tick issue that can slow down client
+
 Nov 22, 2020 (4.32)
 * Remove debugging messages
 

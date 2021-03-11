@@ -1,6 +1,6 @@
-## Interface: 90002
+## Interface: 90005
 ## Title: SimpleCoords
-## Version: 4.32
+## Version: 4.34
 ## Notes: Show map coordinates in movable frame.
 ## Author: Schnoggo
 ##

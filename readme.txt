@@ -1,4 +1,4 @@
-SimpleCoords v4.32
+SimpleCoords v4.34
 
 Description
 ===========
@@ -40,6 +40,9 @@ To-Do:
 
 VERSION HISTORY
 ===============
+Mar 10, 2021 (4.34)
+* Updated TOC and version for WoW 9.05 (Shadowlands)
+
 Nov 23, 2020 (4.33)
 * Fix error when hiding the map dot
 * Fix heartbeat tick issue that can slow down client

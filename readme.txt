@@ -1,4 +1,4 @@
-SimpleCoords v4.34
+SimpleCoords v4.4
 
 Description
 ===========
@@ -40,6 +40,11 @@ To-Do:
 
 VERSION HISTORY
 ===============
+
+Sep 21, 20201 (4.35)
+* Updated TOC for client 9.1
+* Updated HereBeDragons lib to 2.06
+
 Mar 10, 2021 (4.34)
 * Updated TOC and version for WoW 9.05 (Shadowlands)
 

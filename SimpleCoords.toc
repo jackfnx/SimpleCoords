@@ -1,6 +1,6 @@
 ## Interface: 90100
 ## Title: SimpleCoords
-## Version: 4.35
+## Version: 4.4
 ## Notes: Show map coordinates in movable frame.
 ## Author: Schnoggo
 ##

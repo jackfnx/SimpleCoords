@@ -44,7 +44,7 @@ VERSION HISTORY
 Sep 21, 20201 (4.4)
 * Updated TOC for client 9.1
 * Updated HereBeDragons lib to 2.06
-* Implemented new frame background methods introduced in 9.1
+* Implemented new frame background methods introduced in 9.0
 
 Mar 10, 2021 (4.34)
 * Updated TOC and version for WoW 9.05 (Shadowlands)

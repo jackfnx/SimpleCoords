@@ -347,7 +347,6 @@ function SCoordsAddon.init(event, addon)
 				--minimapIcon.dot:Show();
 				mini:SetScript("OnUpdate", SimpleCoords_MapIcon_Update)
 
-
 			-- create the arrow:
 				mini.arrow = mini:CreateTexture("BACKGROUND")
 			 -- minimapIcon.arrow:SetTexture("Interface\\AddOns\\SimpleCoords\\images\\mmarrow")

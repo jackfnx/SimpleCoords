@@ -1,6 +1,15 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <!-- SimpleCoords -->
-<Frame name="SimpleCoordsFrame" toplevel="true" enableMouse="true" movable = "true" parent="UIParent" hidden="false">
+<Frame
+	name="SimpleCoordsFrame"
+	toplevel="true"
+	enableMouse="true"
+	movable="true"
+	parent="UIParent"
+	hidden="false"
+	inherit="BackdropTemplate"
+	>
+
 	<Size>
 		<AbsDimension x="76" y="21"/>
 	</Size>
@@ -10,7 +19,6 @@
 	</Anchors>
 
 	<Backdrop name="$parentBackdrop"
-
 		tile="true">
 		<EdgeSize>
 			<AbsValue val="16"/>
@@ -57,7 +65,6 @@
 			</Anchors>
 			 <Scripts>
 				<OnTabPressed>
-
 					_G["SimpleCoords_Y"]:SetFocus();
 				</OnTabPressed>
 				<OnSpacePressed>
@@ -96,7 +103,7 @@
 					</Offset>
 				</Anchor>
 			</Anchors>
-			 <Scripts>
+			<Scripts>
 				<OnEnterPressed>
 					self:ClearFocus(); <!-- was "this" -->
 					SCoordsAddon.AcceptValue();
@@ -112,13 +119,17 @@
 				</OnLeave>
 			</Scripts>
 		</EditBox>
-
-
 	</Frames>
 
 	<Scripts>
 		<OnLoad>
 			self:SetClampedToScreen(1); <!-- was "this" -->
+			if BackdropTemplateMixin then
+				self.background = CreateFrame("Frame", nil, self, "BackdropTemplate")
+				self.background:SetAllPoints()
+				self.background:SetBackdrop(BACKDROP_TOOLTIP_0_16)
+    		self.background:SetFrameLevel(self:GetFrameLevel())
+      	end
 		</OnLoad>
 		<OnEnter>
 			SCoordsAddon.ShowTooltip();
@@ -139,8 +150,6 @@
 		<OnMouseUp>self:StopMovingOrSizing();</OnMouseUp> <!-- was "this" -->
 		<OnDragStop>self:StopMovingOrSizing();</OnDragStop> <!-- was "this" -->
 	</Scripts>
-
-
 </Frame>
 
 </Ui>

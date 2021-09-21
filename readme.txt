@@ -41,7 +41,7 @@ To-Do:
 VERSION HISTORY
 ===============
 
-Sep 21, 20201 (4.35)
+Sep 21, 20201 (4.4)
 * Updated TOC for client 9.1
 * Updated HereBeDragons lib to 2.06
 * Implemented new frame background methods introduced in 9.1

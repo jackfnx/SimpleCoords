@@ -385,21 +385,3 @@ function SCoordsAddon.init(event, addon)
 		end --SCoordsAddon.addon_loaded
 	end -- ADDON_LOADED
 end
-
-
---- Main WoW Event handler
-function SassAddon.HandleEvent(frame, event, ...)
-	--	DEFAULT_CHAT_FRAME:AddMessage('event ' .. event,  0.5, 1.0, 0.5, 1);
-	local eventHandled = false;
-
-	if "VARIABLES_LOADED" == event then -- sounds like variables_loaded events should be ADDON_LOADED
-		eventHandled = true; -- record that we have been loaded:
-	end
-
-	--	if (eventHandled == false and ((event == "PLAYER_LEAVE_COMBAT") or (event == "PLAYER_REGEN_ENABLED"))) then
-
-	if false == eventHandled then
-		-- msgText = string.lower(arg1);
-	end
-
-end -- HandleEvent()

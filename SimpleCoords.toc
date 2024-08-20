@@ -1,4 +1,4 @@
-## Interface: 90100
+## Interface: 110002
 ## Title: SimpleCoords
 ## Version: 4.4
 ## Notes: Show map coordinates in movable frame.

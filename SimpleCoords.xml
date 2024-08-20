@@ -7,7 +7,7 @@
 	movable="true"
 	parent="UIParent"
 	hidden="false"
-	inherit="BackdropTemplate"
+	inherits="BackdropTemplate"
 	>
 
 	<Size>
@@ -17,16 +17,6 @@
 		<Anchor point="CENTER">
 		</Anchor>
 	</Anchors>
-
-	<Backdrop name="$parentBackdrop"
-		tile="true">
-		<EdgeSize>
-			<AbsValue val="16"/>
-		</EdgeSize>
-		<BackgroundInsets>
-			<AbsInset left="5" right="5" top="5" bottom="5"/>
-		</BackgroundInsets>
-	</Backdrop>
 
 	<Layers>
 		<Layer level="ARTWORK">
@@ -138,9 +128,6 @@
 		<OnLeave>
 			SCoordsAddon.HideTooltip();
 		</OnLeave>
-
-		<OnUpdate script="SCoordsAddon_OnUpdate"/>
-
 		<OnMouseDown>
 			if ( IsShiftKeyDown() ) then
 					self:StartMoving(); <!-- was "this" -->

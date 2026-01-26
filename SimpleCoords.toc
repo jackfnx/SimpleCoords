@@ -1,4 +1,4 @@
-## Interface: 110007
+## Interface: 120000, 120001
 ## Title: SimpleCoords
 ## Version: 4.4
 ## Notes: Show map coordinates in movable frame.
@@ -11,6 +11,7 @@
 ## OptionalDeps:
 ## DefaultState: enabled
 ## SavedVariables:
+## IconTexture: 134234
 libs\LibStub\LibStub.lua
 libs\HereBeDragons\HereBeDragons-2.0.lua
 libs\HereBeDragons\HereBeDragons-Pins-2.0.lua
